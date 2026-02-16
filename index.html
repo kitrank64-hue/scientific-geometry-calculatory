@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scientific Geometry Calculator</title>
+<meta name="description" content="online geometry calculator">
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:linear-gradient(135deg,#1d2671,#c33764);
+    color:#fff;
+}
+header{
+    padding:30px;
+    text-align:center;
+    background:rgba(0,0,0,.35);
+}
+select{
+    padding:6px;
+    border-radius:6px;
+    border:none;
+}
+section{
+    max-width:1400px;
+    margin:auto;
+    padding:30px;
+}
+h2{
+    border-left:5px solid #ff9500;
+    padding-left:12px;
+}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+}
+.card{
+    background:#111;
+    padding:16px;
+    border-radius:16px;
+}
+.formula{
+    background:#000;
+    color:#0f0;
+    padding:6px;
+    border-radius:6px;
+    font-family:monospace;
+}
+input{
+    width:100%;
+    padding:6px;
+    margin:4px 0;
+    border-radius:6px;
+    border:none;
+}
+button{
+    padding:8px;
+    border:none;
+    border-radius:6px;
+    background:#ff9500;
+    color:#fff;
+    cursor:pointer;
+}
+.result{margin-top:6px;font-weight:bold}
+
+.calculator{
+    max-width:360px;
+    margin:auto;
+    background:#000;
+    padding:20px;
+    border-radius:20px;
+}
+.display{
+    width:100%;
+    height:60px;
+    background:#000;
+    color:#0f0;
+    font-size:26px;
+    text-align:right;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+}
+.num{background:#222}
+.op{background:#ff9500}
+.fn{background:#555}
+.eq{background:#34c759;grid-column:span 2}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1 data-i18n="title"></h1>
+<p data-i18n="subtitle"></p>
+<select id="langSwitcher" onchange="setLanguage(this.value)">
+<option value="ru">Русский</option>
+<option value="ky">Кыргызча</option>
+<option value="en">English</option>
+</select>
+</header>
+
+<section>
+<h2 data-i18n="geometry"></h2>
+<div class="grid" id="figures"></div>
+</section>
+
+<section>
+<h2 data-i18n="calculator"></h2>
+
+<div class="calculator">
+<input class="display" id="display" disabled>
+
+<div class="buttons">
+<button class="fn" onclick="clearAll()">AC</button>
+<button class="fn" onclick="back()">⌫</button>
+<button class="fn" onclick="sin()">sin</button>
+<button class="op" onclick="add('÷')">÷</button>
+
+<button class="fn" onclick="cos()">cos</button>
+<button class="fn" onclick="tan()">tan</button>
+<button class="fn" onclick="sqrt()">√</button>
+<button class="op" onclick="add('×')">×</button>
+
+<button class="num" onclick="add('7')">7</button>
+<button class="num" onclick="add('8')">8</button>
+<button class="num" onclick="add('9')">9</button>
+<button class="op" onclick="add('-')">−</button>
+
+<button class="num" onclick="add('4')">4</button>
+<button class="num" onclick="add('5')">5</button>
+<button class="num" onclick="add('6')">6</button>
+<button class="op" onclick="add('+')">+</button>
+
+<button class="num" onclick="add('1')">1</button>
+<button class="num" onclick="add('2')">2</button>
+<button class="num" onclick="add('3')">3</button>
+
+<button class="num" onclick="add('0')">0</button>
+<button class="num" onclick="add('.')">.</button>
+<button class="eq" onclick="calc()">=</button>
+</div>
+</div>
+</section>
+
+<script>
+
+const d=document.getElementById('display');
+const rad=x=>x*Math.PI/180;
+
+/* === УМНАЯ КНОПКА ВВОДА === */
+const add = (v) => {
+
+const operators = ['+','-','*','/','.'];
+const lastChar = d.value.slice(-1);
+
+// запрет оператора в начале (кроме минуса)
+if(d.value === "" && operators.includes(v) && v !== '-') return;
+
+// если подряд оператор → заменяем
+if(operators.includes(lastChar) && operators.includes(v)){
+    d.value = d.value.slice(0,-1) + v;
+    return;
+}
+
+d.value += v;
+};
+
+const clearAll=()=>d.value='';
+const back=()=>d.value=d.value.slice(0,-1);
+
+/* === АВТО-ИСЧЕЗНОВЕНИЕ ERROR === */
+function autoClearDisplay(){
+if(d.value==="Error"){
+setTimeout(()=>{ if(d.value==="Error") d.value=""; },2000);
+}
+}
+
+function safeEval(expression){
+if(!/^[0-9+\-*/().\s]+$/.test(expression)) throw new Error();
+if(/(\+\+|--|\*\*|\/\/)/.test(expression)) throw new Error();
+return Function('"use strict"; return (' + expression + ')')();
+}
+
+const calc=()=>{
+try{ d.value=safeEval(d.value); }
+catch{ d.value="Error"; autoClearDisplay(); }
+};
+
+const sin=()=>{
+try{ d.value=Math.sin(rad(safeEval(d.value))).toFixed(6); }
+catch{ d.value="Error"; autoClearDisplay(); }
+};
+
+const cos=()=>{
+try{ d.value=Math.cos(rad(safeEval(d.value))).toFixed(6); }
+catch{ d.value="Error"; autoClearDisplay(); }
+};
+
+const tan=()=>{
+try{ d.value=Math.tan(rad(safeEval(d.value))).toFixed(6); }
+catch{ d.value="Error"; autoClearDisplay(); }
+};
+
+const sqrt=()=>{
+try{ d.value=Math.sqrt(safeEval(d.value)); }
+catch{ d.value="Error"; autoClearDisplay(); }
+};
+
+/* === ГЕОМЕТРИЯ === */
+
+const figures=[
+{key:"square",f:"S=a²",i:["a"],c:v=>v.a**2},
+{key:"rectangle",f:"S=ab",i:["a","b"],c:v=>v.a*v.b},
+{key:"triangle",f:"S=ah/2",i:["a","h"],c:v=>v.a*v.h/2},
+{key:"circle",f:"S=πr²",i:["r"],c:v=>Math.PI*v.r**2},
+{key:"ellipse",f:"S=πab",i:["a","b"],c:v=>Math.PI*v.a*v.b},
+{key:"trapezoid",f:"S=(a+b)h/2",i:["a","b","h"],c:v=>(v.a+v.b)*v.h/2},
+{key:"parallelogram",f:"S=ah",i:["a","h"],c:v=>v.a*v.h},
+{key:"polygon",f:"S=n·a²/(4tanπ/n)",i:["n","a"],c:v=>v.n*v.a**2/(4*Math.tan(Math.PI/v.n))},
+{key:"cube",f:"V=a³",i:["a"],c:v=>v.a**3},
+{key:"sphere",f:"V=4/3πr³",i:["r"],c:v=>4/3*Math.PI*v.r**3},
+{key:"cylinder",f:"V=πr²h",i:["r","h"],c:v=>Math.PI*v.r**2*v.h},
+{key:"cone",f:"V=1/3πr²h",i:["r","h"],c:v=>Math.PI*v.r**2*v.h/3},
+{key:"torus",f:"V=2π²Rr²",i:["R","r"],c:v=>2*Math.PI**2*v.R*v.r**2}
+];
+
+const root=document.getElementById("figures");
+
+figures.forEach(fig=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<h3 data-i18n="${fig.key}"></h3>
+<div class="formula">${fig.f}</div>
+${fig.i.map(x=>`<input placeholder="${x}" data-k="${x}">`).join("")}
+<button data-i18n="calculate"></button>
+<div class="result"></div>
+`;
+
+card.querySelector("button").onclick=()=>{
+try{
+const v={};
+card.querySelectorAll("input").forEach(i=>v[i.dataset.k]=+i.value);
+card.querySelector(".result").innerText=fig.c(v).toFixed(3);
+}catch{
+card.querySelector(".result").innerText="Error";
+setTimeout(()=>{
+if(card.querySelector(".result").innerText==="Error")
+card.querySelector(".result").innerText="";
+},2000);
+}
+};
+
+root.appendChild(card);
+});
+
+/* === ПЕРЕВОДЫ === */
+
+const translations={
+ru:{
+title:"Научный и геометрический калькулятор",
+subtitle:"Формулы • Геометрия • Наука",
+geometry:"Геометрия",
+calculator:"Научный калькулятор",
+calculate:"Рассчитать",
+square:"Квадрат",
+rectangle:"Прямоугольник",
+triangle:"Треугольник",
+circle:"Круг",
+ellipse:"Эллипс",
+trapezoid:"Трапеция",
+parallelogram:"Параллелограмм",
+polygon:"Правильный многоугольник",
+cube:"Куб",
+sphere:"Сфера",
+cylinder:"Цилиндр",
+cone:"Конус",
+torus:"Тор"
+},
+ky:{
+title:"Илимий жана геометриялык калькулятор",
+subtitle:"Формулалар • Геометрия • Илим",
+geometry:"Геометрия",
+calculator:"Илимий калькулятор",
+calculate:"Эсептөө",
+square:"Квадрат",
+rectangle:"Тик төрт бурчтук",
+triangle:"Үч бурчтук",
+circle:"Айлампа",
+ellipse:"Эллипс",
+trapezoid:"Трапеция",
+parallelogram:"Параллелограмм",
+polygon:"Туура көп бурчтук",
+cube:"Куб",
+sphere:"Шар",
+cylinder:"Цилиндр",
+cone:"Конус",
+torus:"Тор"
+},
+en:{
+title:"Scientific and Geometric Calculator",
+subtitle:"Formulas • Geometry • Science",
+geometry:"Geometry",
+calculator:"Scientific Calculator",
+calculate:"Calculate",
+square:"Square",
+rectangle:"Rectangle",
+triangle:"Triangle",
+circle:"Circle",
+ellipse:"Ellipse",
+trapezoid:"Trapezoid",
+parallelogram:"Parallelogram",
+polygon:"Regular Polygon",
+cube:"Cube",
+sphere:"Sphere",
+cylinder:"Cylinder",
+cone:"Cone",
+torus:"Torus"
+}
+};
+
+function setLanguage(lang){
+document.querySelectorAll("[data-i18n]").forEach(el=>{
+el.innerText=translations[lang][el.dataset.i18n];
+});
+localStorage.setItem("lang",lang);
+}
+
+const saved=localStorage.getItem("lang")||"ru";
+langSwitcher.value=saved;
+setLanguage(saved);
+
+</script>
+
+</body>
+</html>
